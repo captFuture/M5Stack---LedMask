@@ -109,7 +109,7 @@ void setup() {
   M5.Lcd.fillScreen(TFT_BLACK);
   M5.Lcd.setTextColor(BLUE, BLACK);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.setRotation(0);
+  //M5.Lcd.setRotation(0);
 
   // ADC setup
   pinMode(35, INPUT);
