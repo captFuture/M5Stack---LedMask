@@ -10,6 +10,9 @@ https://github.com/ElectroMagus/M5-FFT
 FastLed
 https://github.com/FastLED/FastLED
 
+RGBShades
+https://github.com/macetech/RGBShades
+
 In total there are 51 Leds in the Mask and currently the selected frequency band varies the brightness of the selected pattern.
 The Fastled processing is running on Core 0, The sketch is running on core 1
 

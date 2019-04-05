@@ -1,38 +1,23 @@
-
-#include "arduinoFFT.h"          // Standard Arduino FFT library
-arduinoFFT FFT = arduinoFFT();
 #include <M5Stack.h>
 #include <Fastled.h>
+#include "arduinoFFT.h"
+#include "variables.h"
+#include "XYmap.h"
 
 FASTLED_USING_NAMESPACE
 
-#define SCALE 512
-#define SAMPLES 1024              // Must be a power of 2
-#define SAMPLING_FREQUENCY 80000
-//// Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
-
-#if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
-#warning "Requires FastLED 3.1 or later; check github for latest code."
-#endif
-
+// FastLED definitions
 #define DATA_PIN    22
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER RGB
-#define NUM_LEDS    51
+#define NUM_LEDS    91
 #define MILLI_AMPS  1000
-
-CRGB leds[NUM_LEDS];
-uint8_t gHue = 0;
-uint8_t selected = 0;
-uint8_t selectedband = 1;
-uint8_t switchValue = 1;
-uint8_t switchMaxValue = 7;
-uint8_t modeValue = 1;
-uint8_t modeMaxValue = 3;
-
-uint8_t Brightness = 20;
-uint8_t newBrightness;
 #define FRAMES_PER_SECOND  120
+
+CRGB leds[ NUM_LEDS ];
+CRGBPalette16 currentPalette(RainbowColors_p); // global palette storage
+
+arduinoFFT FFT = arduinoFFT();
 
 struct eqBand {
   const char *freqname;
@@ -58,17 +43,6 @@ eqBand audiospectrum[8] = {
   { "20KHz", 55,  0, 0, 0, 0}
 };
 
-unsigned int sampling_period_us;
-unsigned long microseconds;
-double vReal[SAMPLES];
-double vImag[SAMPLES];
-unsigned long newTime, oldTime;
-uint16_t tft_width  = 320; // ILI9341_TFTWIDTH;
-uint16_t tft_height = 240; // ILI9341_TFTHEIGHT;
-uint8_t bands = 8;
-uint8_t bands_width = floor( tft_width / bands );
-uint8_t bands_pad = bands_width - 10;
-uint16_t colormap[255]; // color palette for the band meter (pre-fill in setup)
 
 // Tasks stuff
 #define FASTLED_SHOW_CORE 0
@@ -98,7 +72,7 @@ void FastLEDshowTask(void *pvParameters)
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+SimplePatternList gPatterns = {rainbowWithGlitter, confetti, sinelon, juggle, bpm, slantBars, threeDee, fillcolor, rainbow};
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]));
 
@@ -229,25 +203,29 @@ void loop() {
 
     if(band == selectedband){
       //newBrightness = audiospectrum[band].peak;
-      newBrightness = audiospectrum[band].lastval;
-      newBrightness = map(newBrightness, 0, 255, 0, Brightness);
-      if(modeValue == 1){ Serial.print("EQ for Band: "); Serial.print(band); Serial.print(" peak: "); Serial.println(audiospectrum[band].peak); };
-
+      if(enableMusic == 1){
+        newBrightness = audiospectrum[band].lastval;
+        newBrightness = map(newBrightness, 0, 255, 0, Brightness);
+        if(modeValue == 1){ Serial.print("EQ for Band: "); Serial.print(band); Serial.print(" peak: "); Serial.println(audiospectrum[band].peak); };
+      }else{
+        newBrightness = Brightness;
+      }
     }
 
   }
 
   //rainbow();
   gPatterns[gCurrentPatternNumber]();
-  FastLED.show();
-  FastLED.delay(1000/FRAMES_PER_SECOND);
+  FastLED.delay(effectSpeed/FRAMES_PER_SECOND);
+
   EVERY_N_MILLISECONDS( 20 ) { gHue++; };
   FastLED.setBrightness(newBrightness);
+  //FastLED.show();
   FastLEDshowESP32();
 
 
   if(M5.BtnA.wasReleased()){
-    switchValue = switchValue-1;
+    switchValue = switchValue-switchAmount;
     if(switchValue <= 0){
       switchValue = switchMaxValue;
     };
@@ -272,6 +250,13 @@ void loop() {
         Serial.println(gCurrentPatternNumber);
         break;
 
+      case 4:
+        // Change speed
+        effectSpeed = switchValue;
+        Serial.print("Speed: ");
+        Serial.println(effectSpeed);
+        break;
+
       default:
 
         break;
@@ -283,26 +268,44 @@ void loop() {
     if(modeValue > modeMaxValue){
       modeValue = 1;
     };
-    Serial.print("modeValue: ");
-    Serial.println(modeValue);
+    Serial.print("Mode: ");
+    Serial.print(modeValue);
+    Serial.print(" - ");
 
     switch (modeValue){
       case 1:
         // Change Spectrum analyzer Band
         switchValue = selectedband;
         switchMaxValue = 7;
+        switchAmount = 1;
+        Serial.println("Change Band");
         break;
 
       case 2:
         // Change overall Brightness
         switchMaxValue = 255;
         switchValue = Brightness;
+        switchAmount = 5;
+        Serial.println("Change Brightness");
         break;
 
       case 3:
         // Change playing pattern
         switchValue = gCurrentPatternNumber+1;
         switchMaxValue = ARRAY_SIZE(gPatterns);
+        switchAmount = 1;
+        Serial.println("Change Pattern");
+        break;
+
+      case 4:
+        // Change speed
+        switchMaxValue = 1000;
+        //switchValue = effectSpeed;
+        switchAmount = 10;
+        Serial.print("Change Speed: ( 0");
+        Serial.print(" - ");
+        Serial.print(switchMaxValue);
+        Serial.println(") inc");
         break;
 
       default:
@@ -313,7 +316,7 @@ void loop() {
   };
 
   if(M5.BtnC.wasReleased()){
-    switchValue = switchValue+1;
+    switchValue = switchValue+switchAmount;
     if(switchValue > switchMaxValue){
       switchValue = 1;
     };
@@ -338,77 +341,17 @@ void loop() {
         Serial.println(gCurrentPatternNumber);
         break;
 
+      case 4:
+        // Change speed
+        effectSpeed = switchValue;
+        Serial.print("Speed: ");
+        Serial.println(effectSpeed);
+        break;
+
       default:
 
         break;
     }
   };
   M5.update();
-}
-
-
-
-
-
-// PATTERN STUFF -------------------
-void nextPattern()
-{
-  // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE(gPatterns);
-}
-
-void rainbow()
-{
-  fill_rainbow( leds, NUM_LEDS, gHue, 7);
-}
-
-void rainbowWithGlitter()
-{
-  // built-in FastLED rainbow, plus some random sparkly glitter
-  rainbow();
-  addGlitter(80);
-}
-
-void addGlitter( fract8 chanceOfGlitter)
-{
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
-  }
-}
-
-void confetti()
-{
-  // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
-  int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
-}
-
-void sinelon()
-{
-  // a colored dot sweeping back and forth, with fading trails
-  fadeToBlackBy( leds, NUM_LEDS, 20);
-  int pos = beatsin16( 13, 0, NUM_LEDS-1 );
-  leds[pos] += CHSV( gHue, 255, 192);
-}
-
-void bpm()
-{
-  // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-  uint8_t BeatsPerMinute = 62;
-  CRGBPalette16 palette = PartyColors_p;
-  uint8_t beat = beatsin8( BeatsPerMinute, 64, 255);
-  for( int i = 0; i < NUM_LEDS; i++) { //9948
-    leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
-  }
-}
-
-void juggle() {
-  // eight colored dots, weaving in and out of sync with each other
-  fadeToBlackBy( leds, NUM_LEDS, 20);
-  byte dothue = 0;
-  for( int i = 0; i < 8; i++) {
-    leds[beatsin16( i+7, 0, NUM_LEDS-1 )] |= CHSV(dothue, 200, 255);
-    dothue += 32;
-  }
 }
