@@ -1,31 +1,63 @@
-// FFT Spectrum analyzer definitions
-#define SCALE 512
-#define SAMPLES 1024              // Must be a power of 2
-#define SAMPLING_FREQUENCY 80000
-//// Determines maximum frequency that can be analysed by the FFT Fmax=sampleF/2.
 
-unsigned int sampling_period_us;
-unsigned long microseconds;
-double vReal[SAMPLES];
-double vImag[SAMPLES];
-unsigned long newTime, oldTime;
 uint16_t tft_width  = 320; // ILI9341_TFTWIDTH;
 uint16_t tft_height = 240; // ILI9341_TFTHEIGHT;
-uint8_t bands = 8;
-uint8_t bands_width = floor( tft_width / bands );
-uint8_t bands_pad = bands_width - 10;
-uint16_t colormap[255];
+#define M5STACKFIRE_MICROPHONE_PIN 34
+#define M5STACKFIRE_SPEAKER_PIN 25
+
+// FastLED internal definitions
+#define DATA_PIN1    15
+#define NUM_LEDS1    10
+
+// FastLED exzernal definitions
+#define DATA_PIN    21 //sda - PORTA
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER RGB
+#define NUM_LEDS    91
+#define MILLI_AMPS  1000
+#define FRAMES_PER_SECOND  120
+
+unsigned long effectMillis = 0; // store the time of last effect function run
+unsigned long displayMillis = 0; // store the time of last display
+unsigned long displayTimeout = 10000;
+unsigned long currentMillis; // store current loop's millis value
+int displayBrightness = 10;
+
+int minVolume = 500;
+int maxVolume = 50000;
+
+int fireleds = 0;
 
 int enableMusic = 1;
+int enableMusicOLD = 0;
+int enableLeds = 1;
+int autocycle = 1;
 
 uint8_t gHue = 0;
-uint8_t selected = 0;
-uint8_t selectedband = 1;
-uint8_t switchValue = 1;
-uint8_t switchAmount = 1;
-uint8_t switchMaxValue = 7;
-uint8_t modeValue = 1;
-uint8_t modeMaxValue = 4;
-uint8_t Brightness = 20;
-uint8_t newBrightness;
-int effectSpeed = 1000;
+int selected = 0;
+int selectedband = 1;
+
+int modeValue = 0;
+int modeMaxValue = 6;
+
+int minBrightness = 10;
+int maxBrightness = 100;
+int power;
+int newBrightness = minBrightness;
+
+int switchValue = 0;
+int switchAmount = 1;
+int switchMaxValue = 10;
+int switchMinValue = 0;
+String currentSetting = "Pattern";
+
+String emoNames[] = {"heart", "filledheart", "smile"};
+int currentEmo = 0;
+
+// Effect variables
+bool effectInit = false;
+int effectDelay = 10;
+
+
+const unsigned long
+    REPEAT_FIRST(500),
+    REPEAT_INCR(100);
