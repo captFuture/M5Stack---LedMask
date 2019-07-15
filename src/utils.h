@@ -2,6 +2,7 @@
 
 boolean effectInit = false; // indicates if a pattern has been recently switched
 uint16_t effectDelay = 0; // time between automatic effect changes
+uint16_t musicEffectDelay = 0; // time between automatic effect changes
 unsigned long effectMillis = 0; // store the time of last effect function run
 unsigned long cycleMillis = 0; // store the time of last effect change
 unsigned long currentMillis; // store current loop's millis value

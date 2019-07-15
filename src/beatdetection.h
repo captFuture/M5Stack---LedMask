@@ -6,7 +6,7 @@ void vuMeter(){
     int value = analogRead(M5STACKFIRE_MICROPHONE_PIN);
     micValue[n] = value;
     meanValue += value;
-    delayMicroseconds(20);
+    delayMicroseconds(5);
   }
   meanValue /= NUMBEROFSAMPLES;
 
@@ -39,8 +39,8 @@ byte getBand(int i) {
 void displayBand(int band, int dsize){
   uint16_t hpos = bands_width*band;
   int dmax = 100;
-  if(dsize>tft_height-50) {
-    dsize = tft_height-50; // leave some hspace for text
+  if(dsize>tft_height-20) {
+    dsize = tft_height-20; // leave some hspace for text
   }
   if(dsize < audiospectrum[band].lastval) {
     // lower value, delete some lines
@@ -49,7 +49,11 @@ void displayBand(int band, int dsize){
   }
   if (dsize > dmax) dsize = dmax;
   for (int s = 0; s <= dsize; s=s+4){
-    M5.Lcd.drawFastHLine(hpos, tft_height-s, bands_pad, colormap[tft_height-s]);
+    if(band == currentSensitivity){
+      M5.Lcd.drawFastHLine(hpos, tft_height-s, bands_pad, selectedColormap[tft_height-s]);
+    }else{
+      M5.Lcd.drawFastHLine(hpos, tft_height-s, bands_pad, colormap[tft_height-s]);
+    }
   }
   if (dsize > audiospectrum[band].peak) {
     audiospectrum[band].peak = dsize;
@@ -57,11 +61,6 @@ void displayBand(int band, int dsize){
   audiospectrum[band].lastval = dsize;
   audiospectrum[band].lastmeasured = millis();
 
-  if(band == currentSensitivity){
-    newBrightness = dsize;
-    newBrightness = map(newBrightness, 0, 255, minBrightness, maxBrightness);
-    FastLED.setBrightness(newBrightness);
-  }
 
 }
 
@@ -88,14 +87,30 @@ void beatDetect(){
     }
   }
 
+
   long vnow = millis();
   for (byte band = 0; band <= 7; band++) {
+
+    if(band == currentSensitivity){
+      newBrightness = audiospectrum[band].peak;
+      Serial.print(newBrightness);
+      Serial.print("-");
+      //newBrightness = audiospectrum[band].amplitude;
+      newBrightness = map(newBrightness, 0, 255, minBrightness, maxBrightness);
+      Serial.println(newBrightness);
+      FastLED.setBrightness(newBrightness);
+      //Serial.print("Band: ");  Serial.print(band);
+      //Serial.print("| peak: ");  Serial.print(audiospectrum[band].peak);
+      //Serial.print("| bright: ");  Serial.println(newBrightness);
+    }
+
     // auto decay every 50ms on low activity bands
-    if(vnow - audiospectrum[band].lastmeasured > 50) {
+    if(vnow - audiospectrum[band].lastmeasured > 100) {
       displayBand(band, audiospectrum[band].lastval>4 ? audiospectrum[band].lastval-4 : 0);
+
     }
     if (audiospectrum[band].peak > 0) {
-      audiospectrum[band].peak -= 2;
+      audiospectrum[band].peak -= 8;
       if(audiospectrum[band].peak<=0) {
         audiospectrum[band].peak = 0;
       }

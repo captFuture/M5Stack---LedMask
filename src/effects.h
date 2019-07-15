@@ -14,6 +14,7 @@ void threeSine() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 100;
+    musicEffectDelay = 10;
   }
 
   // Draw one frame of the animation into the LED array
@@ -44,6 +45,7 @@ void plasma() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 10;
+    musicEffectDelay = 0;
   }
 
   // Calculate current center of plasma pattern (can be offscreen)
@@ -54,7 +56,8 @@ void plasma() {
   for (int x = 0; x < kMatrixWidth; x++) {
     for (int y = 0; y < kMatrixHeight; y++) {
       byte color = sin8(sqrt(sq(((float)x - 7.5) * 10 + xOffset - 127) + sq(((float)y - 2) * 10 + yOffset - 127)) + offset);
-      leds[XY(x, y)] = CHSV(color, 255, 255);
+      //leds[XY(x, y)] = CHSV(color, 255, 255);
+      leds[XY(x, y)] = ColorFromPalette(currentPalette, color, 255);
     }
   }
 
@@ -72,6 +75,7 @@ void rider() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 5;
+    musicEffectDelay = 0;
     riderPos = 0;
   }
 
@@ -99,6 +103,7 @@ void glitter() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 15;
+    musicEffectDelay = 0;
   }
 
   // Draw one frame of the animation into the LED array
@@ -121,6 +126,7 @@ void colorFill() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 45;
+    musicEffectDelay = 0;
     currentColor = 0;
     currentRow = 0;
     currentDirection = 0;
@@ -130,6 +136,7 @@ void colorFill() {
   // test a bitmask to fill up or down when currentDirection is 0 or 2 (0b00 or 0b10)
   if (!(currentDirection & 1)) {
     effectDelay = 45; // slower since vertical has fewer pixels
+    musicEffectDelay = 0;
     for (byte x = 0; x < kMatrixWidth; x++) {
       byte y = currentRow;
       if (currentDirection == 2) y = kMatrixHeight - 1 - currentRow;
@@ -140,6 +147,7 @@ void colorFill() {
   // test a bitmask to fill left or right when currentDirection is 1 or 3 (0b01 or 0b11)
   if (currentDirection & 1) {
     effectDelay = 20; // faster since horizontal has more pixels
+    musicEffectDelay = 0;
     for (byte y = 0; y < kMatrixHeight; y++) {
       byte x = currentRow;
       if (currentDirection == 3) x = kMatrixWidth - 1 - currentRow;
@@ -157,6 +165,7 @@ void colorFill() {
     currentDirection++;
     if (currentDirection > 3) currentDirection = 0;
     effectDelay = 300; // wait a little bit longer after completing a fill
+    musicEffectDelay = 300;
   }
 
 
@@ -166,6 +175,7 @@ void threeDee() { // Emulate 3D anaglyph glasses
   if (effectInit == false) {
 	   effectInit = true;
      effectDelay = 10;
+     musicEffectDelay = 0;
   }
 
   for (byte x = 0; x < kMatrixWidth; x++) {
@@ -193,6 +203,7 @@ void sideRain() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 30;
+    musicEffectDelay = 0;
   }
 
   scrollArray(rainDir);
@@ -210,6 +221,7 @@ void confetti() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 10;
+    musicEffectDelay = 0;
     selectRandomPalette();
   }
 
@@ -230,6 +242,7 @@ void slantBars() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 5;
+    musicEffectDelay = 0;
   }
 
   for (byte x = 0; x < kMatrixWidth; x++) {
@@ -261,6 +274,7 @@ void scrollText(byte message, byte style, CRGB fgColor, CRGB bgColor) {
     FastLED.clear();
     effectInit = true;
     effectDelay = 150;
+    musicEffectDelay = 100;
     currentMessageChar = 0;
     currentCharColumn = 0;
     //Serial.println("effectinit");
@@ -291,7 +305,7 @@ void scrollText(byte message, byte style, CRGB fgColor, CRGB bgColor) {
       } else {
         pixelColor = bgColor;
       }
-      leds[XY(x, y)] = pixelColor;
+      leds[XY(x, y+2)] = pixelColor;
     }
   }
 
@@ -333,7 +347,8 @@ void radiateCenter() {
   // startup tasks
   if (effectInit == false) {
     effectInit = true;
-    effectDelay = 0;
+    effectDelay = 10;
+    musicEffectDelay = 0;
   }
 
   int xOffset = 15;
@@ -352,54 +367,56 @@ void radiateCenter() {
 
 //Show emoticon
 
-/*void filledheart(){
-  const uint8_t pattern[] = {8,9,11,12,13,17,18,19,20,25,26,27,28,29,30,31,32,35,36,37,38,41,42,43,45,46};
-  int patternSize = ARRAY_SIZE(pattern);
-  if (effectInit == false) {
+const uint8_t Smile[] = {5,8,13,17,27,30,38,41,45};
+void smile() {
+   if (effectInit == false) {
     effectInit = true;
-    effectDelay = 10;
+    effectDelay = 30;
+    musicEffectDelay = 0;
     FastLED.clear();
-  }
-   for (int x = 0; x < patternSize; x++) {
-    leds[pattern[x]] = CHSV(cycleHue, 255, 255);
+   }
+   for (int x = 0; x < 9; x++) {
+    leds[Smile[x]] = CHSV(cycleHue, 255, 255);
    }
 }
 
-void heart(){
-  const uint8_t pattern[] = {8,9,11,13,17,20,25,28,29,32,35,38,43,41,45,46};
-  int patternSize = ARRAY_SIZE(pattern);
-  if (effectInit == false) {
-    effectInit = true;
-    effectDelay = 10;
-    FastLED.clear();
-  }
-   for (int x = 0; x < patternSize; x++) {
-    leds[pattern[x]] = CHSV(cycleHue, 255, 255);
-   }
-}
-
-void smile(){
-  const uint8_t pattern[] = {5,8,13,17,27,30,38,41,45};
-  int patternSize = ARRAY_SIZE(pattern);
-  if (effectInit == false) {
-    effectInit = true;
-    effectDelay = 10;
-    FastLED.clear();
-  }
-   for (int x = 0; x < patternSize; x++) {
-    leds[pattern[x]] = CHSV(cycleHue, 255, 255);
-   }
-}*/
 
 const uint8_t Heart[] =  {8,9,11,13,17,20,25,28,29,32,35,38,43,41,45,46};
-
 void heart() {
    if (effectInit == false) {
     effectInit = true;
     effectDelay = 30;
+    musicEffectDelay = 0;
     FastLED.clear();
    }
    for (int x = 0; x < 16; x++) {
     leds[Heart[x]] = CHSV(cycleHue, 255, 255);
+   }
+}
+
+
+const uint8_t filledHeart[] =  {8,9,11,12,13,17,18,19,20,25,26,27,28,29,30,31,32,35,36,37,38,41,42,43,45,46};
+void filledheart() {
+   if (effectInit == false) {
+    effectInit = true;
+    effectDelay = 30;
+    musicEffectDelay = 0;
+    FastLED.clear();
+   }
+   for (int x = 0; x < 26; x++) {
+    leds[filledHeart[x]] = CHSV(cycleHue, 255, 255);
+   }
+}
+
+const uint8_t Sad[] =  {7,13,19,25,32,37,40};
+void sad() {
+   if (effectInit == false) {
+    effectInit = true;
+    effectDelay = 30;
+    musicEffectDelay = 0;
+    FastLED.clear();
+   }
+   for (int x = 0; x < 7; x++) {
+    leds[Sad[x]] = CHSV(cycleHue, 255, 255);
    }
 }

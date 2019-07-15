@@ -1,5 +1,5 @@
 #define SAMPLES 512
-#define SAMPLING_FREQUENCY 40000
+#define SAMPLING_FREQUENCY 30000
 
 // includes for beat beatdetection
 struct eqBand {
@@ -34,6 +34,7 @@ uint8_t bands = 8;
 uint8_t bands_width = floor( tft_width / bands );
 uint8_t bands_pad = bands_width - 10;
 uint16_t colormap[255]; // color palette for the band meter (pre-fill in setup)
+uint16_t selectedColormap[255]; // color palette for the band meter (pre-fill in setup)
 
 // RGB Mask data output to LEDs is on pin 21
 #define LED_PIN  21
@@ -51,7 +52,7 @@ int minVolume = 500;
 int maxVolume = 50000;
 int minSensitivity = 0;
 
-int minBrightness = 10;
+int minBrightness = 2;
 int maxBrightness = 255;
 int power;
 int newBrightness = minBrightness;
@@ -84,7 +85,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(num_led, led_pin, NEO_GRB + NEO_KHZ8
 // Runs one time at the start of the program (power up or reset)
 void setup() {
   M5.begin();
-  M5.Lcd.setBrightness(20);
+  M5.Lcd.setBrightness(50);
   dacWrite(25, 0);
   Serial.begin(115200);
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, LAST_VISIBLE_LED + 1);
@@ -99,15 +100,18 @@ void setup() {
   delay(2000);
   for(uint8_t i=0;i<tft_height;i++) {
     colormap[i] = M5.Lcd.color565(tft_height-i*.5, i*1.1, 0);
+    selectedColormap[i] = M5.Lcd.color565(tft_height-i*.5, 0, i*1.1);
   }
-  /*for (byte band = 0; band <= 7; band++) {
-    M5.Lcd.setCursor(bands_width*band + 2, 0);
-    M5.Lcd.print(audiospectrum[band].freqname);
-  }*/
+
 }
 
 // list of functions that will be displayed
-functionList effectList[] = {heart, threeSine,
+functionList effectList[] = {
+                              //sad,
+                             filledheart,
+                             smile,
+                             heart,
+                             threeSine,
                              radiateCenter,
                              scrollTextZero,
                              threeDee,
@@ -146,6 +150,7 @@ void loop()
   if(M5.BtnB.wasPressed()){
     cycleMillis = currentMillis;
     if (++currentEffect >= numEffects) currentEffect = 0; // loop to start of effect list
+    selectRandomPalette();
     effectInit = false; // trigger effect initialization when new effect is selected
   }
 
@@ -181,8 +186,13 @@ void loop()
   // switch to a new effect every cycleTime milliseconds
   if (currentMillis - cycleMillis > cycleTime && autoCycle == true) {
     cycleMillis = currentMillis;
-    if (++currentEffect >= numEffects) currentEffect = 0; // loop to start of effect list
+    selectRandomPalette();
+    //if (++currentEffect >= numEffects) currentEffect = 0; // loop to start of effect list
+    currentEffect = random(0, numEffects-1);
+
     effectInit = false; // trigger effect initialization when new effect is selected
+    //Serial.print("Colorpalette: "); Serial.print(currentPalette);
+    //Serial.print("| Effect: "); Serial.println(currentEffect);
   }
 
   // increment the global hue value every hueTime milliseconds
@@ -191,11 +201,18 @@ void loop()
     hueCycle(1); // increment the global hue value
   }
 
-  // run the currently selected effect every effectDelay milliseconds
-  if (currentMillis - effectMillis > effectDelay) {
-    effectMillis = currentMillis;
-    effectList[currentEffect](); // run the selected effect function
-    random16_add_entropy(1); // make the random values a bit more random-ish
+  if(enableMusic){
+    if (currentMillis - effectMillis > musicEffectDelay) {
+      effectMillis = currentMillis;
+      effectList[currentEffect](); // run the selected effect function
+      random16_add_entropy(1); // make the random values a bit more random-ish
+    }
+  }else{
+    if (currentMillis - effectMillis > effectDelay) {
+      effectMillis = currentMillis;
+      effectList[currentEffect](); // run the selected effect function
+      random16_add_entropy(1); // make the random values a bit more random-ish
+    }
   }
 
   // run a fade effect too if the confetti effect is running
