@@ -1,63 +1,23 @@
+/* definitions for Hardware setup */
+#define LED_PIN  21             // RGB Mask data output to LEDs is on pin 21
+#define COLOR_ORDER GRB         // RGB Mask color order (Green/Red/Blue)
+#define CHIPSET     WS2812B
+#define MICROPHONE_PIN 34       //internal mic M5stack fire
+#define SPEAKER_PIN 25
 
-uint16_t tft_width  = 320; // ILI9341_TFTWIDTH;
-uint16_t tft_height = 240; // ILI9341_TFTHEIGHT;
-#define M5STACKFIRE_MICROPHONE_PIN 34
-#define M5STACKFIRE_SPEAKER_PIN 25
+int minBrightness = 2;              //minimal brightness of Mask LEDs when reacting to music
+int maxBrightness = 255;            //maximal brightness of Mask LEDs when reacting to music
+int newBrightness = minBrightness;  //set the LED brightness initially
+byte currentBrightness = maxBrightness;
+int enableMusic = 2;                //set the mode to music reactive initially
+int power;                          //
+int minBand = 0;                    //
+byte currentBand = minBand;         //spectrum analyzer band to react to
 
-// FastLED internal definitions
-#define DATA_PIN1    15
-#define NUM_LEDS1    10
+// Timing parameters
+#define cycleTime 15000             //time to keep actual pattern in autoCycle mode
+#define hueTime 30
 
-// FastLED exzernal definitions
-#define DATA_PIN    21 //sda - PORTA
-#define LED_TYPE    WS2812B
-#define COLOR_ORDER RGB
-#define NUM_LEDS    91
-#define MILLI_AMPS  1000
-#define FRAMES_PER_SECOND  120
-
-unsigned long effectMillis = 0; // store the time of last effect function run
-unsigned long displayMillis = 0; // store the time of last display
-unsigned long displayTimeout = 10000;
-unsigned long currentMillis; // store current loop's millis value
-int displayBrightness = 10;
-
-int minVolume = 500;
-int maxVolume = 50000;
-
-int fireleds = 0;
-
-int enableMusic = 1;
-int enableMusicOLD = 0;
-int enableLeds = 1;
-int autocycle = 1;
-
-uint8_t gHue = 0;
-int selected = 0;
-int selectedband = 1;
-
-int modeValue = 0;
-int modeMaxValue = 6;
-
-int minBrightness = 10;
-int maxBrightness = 100;
-int power;
-int newBrightness = minBrightness;
-
-int switchValue = 0;
-int switchAmount = 1;
-int switchMaxValue = 10;
-int switchMinValue = 0;
-String currentSetting = "Pattern";
-
-String emoNames[] = {"heart", "filledheart", "smile"};
-int currentEmo = 0;
-
-// Effect variables
-bool effectInit = false;
-int effectDelay = 10;
-
-
-const unsigned long
-    REPEAT_FIRST(500),
-    REPEAT_INCR(100);
+/* definitions for second Ledstrip on PORTC */
+#define NUM_LEDS1  22          // Number of pixels in strand
+#define LED_PIN1    16         // NeoPixel LED strand is connected to PORTC of M5Stack

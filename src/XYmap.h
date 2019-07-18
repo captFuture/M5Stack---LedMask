@@ -16,6 +16,11 @@
 // Params for width and height
 const uint8_t kMatrixWidth = 13;
 const uint8_t kMatrixHeight = 7;
+
+#define NUM_LEDS (kMatrixWidth * kMatrixHeight)
+CRGB leds[ NUM_LEDS ];
+
+
 #define LAST_VISIBLE_LED 50
 uint8_t XY( uint8_t x, uint8_t y)
 {

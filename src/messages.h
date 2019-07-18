@@ -1,11 +1,11 @@
 // Scrolling messages
 
-const char string0[] PROGMEM = "HELLO WORLD ";
-const char string1[] PROGMEM = "RAINBOW TEXT!  ";
-const char string2[] PROGMEM = "";
+const char string0[] PROGMEM = "xxxxxxxxxx";
+const char string1[] PROGMEM = "||||||||||";
+const char string2[] PROGMEM = "oooooooooo";
 //char string3[] PROGMEM = "  ";
 
-const char * const stringArray[] PROGMEM = {
+const char * const stringArray[] = {
   string0,
   string1,
   string2
