@@ -13,10 +13,8 @@ boolean autoCycle = true; // flag for automatic effect changes
 
 CRGBPalette16 currentPalette(RainbowColors_p); // global pallete storage
 
-
 typedef void (*functionList)(); // definition for list of effect function pointers
 #define numEffects (sizeof(effectList) / sizeof(effectList[0]))
-
 
 // Increment the global hue value for functions that use it
 byte cycleHue = 0;
