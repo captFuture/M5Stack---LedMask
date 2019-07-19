@@ -14,14 +14,14 @@ struct eqBand {
 };
 
 eqBand audiospectrum[8] = {
-  { "125Hz", 500, 0, 0, 0, 0},
-  { "250Hz", 200, 0, 0, 0, 0},
-  { "500Hz", 200, 0, 0, 0, 0},
-  { "1KHz",  200, 0, 0, 0, 0},
-  { "2KHz",  200, 0, 0, 0, 0},
-  { "4KHz",  100, 0, 0, 0, 0},
-  { "8KHz",  100, 0, 0, 0, 0},
-  { "16KHz", 50,  0, 0, 0, 0}
+  { "125Hz", 1000, 0, 0, 0},
+  { "250Hz", 500, 0, 0, 0},
+  { "500Hz", 300, 0, 0, 0},
+  { "1KHz",  250, 0, 0, 0},
+  { "2KHz",  200, 0, 0, 0},
+  { "4KHz",  100, 0, 0, 0},
+  { "8KHz",  50, 0, 0, 0},
+  { "16KHz", 25,  0, 0, 0}
 };
 
 unsigned int sampling_period_us;
@@ -36,7 +36,6 @@ uint8_t bands_width = floor( tft_width / bands );
 uint8_t bands_pad = bands_width - 10;
 uint16_t colormap[255];             // color palette for the band meter
 uint16_t selectedColormap[255];     // color palette for the selected band meter
-
 uint8_t peakfallRate = 10;           //how fast is the peak bar falling (and led brightness) bigger value means faster
 
 void displayBand(int band, int dsize){
@@ -79,6 +78,8 @@ byte getBand(int i) {
 }
 
 void beatDetect(){
+  fill_rainbow(leds1, NUM_LEDS1, cycleHue);
+
   for (int i = 0; i < SAMPLES; i++) {
       newTime = micros()-oldTime;
       oldTime = newTime;
@@ -95,8 +96,9 @@ void beatDetect(){
     for (int i = 2; i < (SAMPLES/2); i++){
       // Don't use sample 0 and only first SAMPLES/2 are usable.
       // Each array element represents a frequency and its value the amplitude.
-      if (vReal[i] > 1500) { // Add a crude noise filter, 10 x amplitude or more
+      if (vReal[i] > 1000) { // Add a crude noise filter, 10 x amplitude or more
         byte bandNum = getBand(i);
+
         if(bandNum!=8) {
           displayBand(bandNum, (int)vReal[i]/audiospectrum[bandNum].amplitude);
         }
@@ -110,9 +112,15 @@ void beatDetect(){
     if(band == currentBand){
         newBrightness = audiospectrum[band].peak;
         newBrightness = map(newBrightness, 0, 255, minBrightness, maxBrightness);
+        if(newBrightness < 5){
+          newBrightness = minBrightness;
+        }
+        if(newBrightness > 255){
+          newBrightness = 255;
+        }
         FastLED.setBrightness(newBrightness);
-
-        fill_rainbow(leds1, NUM_LEDS1, cycleHue);
+        Serial.println(newBrightness);
+        oldBrightness = newBrightness;
     }
 
       // auto decay every 50ms on low activity bands

@@ -98,7 +98,18 @@ void vuMeter(){
   newBrightness = b;
   if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
   if(newBrightness < minBrightness){newBrightness = minBrightness;};
-  FastLED.setBrightness(newBrightness);
+
+  newBrightness = map(newBrightness, 0, 255, minBrightness, maxBrightness);
+  if(newBrightness < 5){
+    newBrightness = minBrightness;
+  }
+  /*for(int i=0, i<NUM_LEDS, i++){
+    leds[i]=CHSV();
+  }
+  for(int i=0, i<NUM_LEDS1, i++){
+    leds1[i]=CHSV();
+  }*/
+    //FastLED.setBrightness(newBrightness);
 
   //Fill the strip with rainbow gradient
   fill_rainbow( leds1, NUM_LEDS1, 0, 255/NUM_LEDS1 );

@@ -12,6 +12,7 @@ CRGB leds1[NUM_LEDS1];
 #include "effects.h"
 
 //includes for spectrum analyzer
+
 #include "arduinoFFT.h"
 #include "spectrum.h"
 
@@ -22,7 +23,6 @@ CRGB leds1[NUM_LEDS1];
 #define imgTml tmllogo
 #define PicArray extern unsigned char
 PicArray imgTml[];
-
 
 void setup() {
   M5.begin();
@@ -92,6 +92,7 @@ void loop()
     //Serial.println("Musicmode-FFT");
   }else{
     FastLED.setBrightness(currentBrightness);
+    fill_rainbow(leds1, NUM_LEDS1, cycleHue);
     //Serial.println("Musicmode-Fix");
   }
 
@@ -185,7 +186,7 @@ void loop()
   }
 
   // run a fade effect too if the confetti effect is running
-  if (effectList[currentEffect] == confetti) fadeAll(1);
+  //if (effectList[currentEffect] == confetti) fadeAll(1);
 
   FastLED.show(); // send the contents of the led memory to the LEDs
   M5.update();

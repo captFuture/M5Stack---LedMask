@@ -8,6 +8,9 @@
 int minBrightness = 2;              //minimal brightness of Mask LEDs when reacting to music
 int maxBrightness = 255;            //maximal brightness of Mask LEDs when reacting to music
 int newBrightness = minBrightness;  //set the LED brightness initially
+int oldBrightness = newBrightness;
+int calcBrightness = minBrightness;
+
 byte currentBrightness = maxBrightness;
 int enableMusic = 2;                //set the mode to music reactive initially
 int power;                          //
