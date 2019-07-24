@@ -78,6 +78,9 @@ byte getBand(int i) {
 }
 
 void beatDetect(){
+  analogReadResolution(12);
+  analogSetWidth(12);
+
   fill_rainbow(leds1, NUM_LEDS1, cycleHue);
 
   for (int i = 0; i < SAMPLES; i++) {

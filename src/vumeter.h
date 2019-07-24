@@ -1,149 +1,114 @@
 // some definitions are in variables.h, the rest is here
 
-#define SAMPLE_WINDOW   10    // Sample window for average level
-#define PEAK_HANG 5          //Time of pause before peak dot falls
-#define PEAK_FALL 3           //Rate of falling peak dot
-#define INPUT_FLOOR 200       //Lower range of analogRead input
-#define INPUT_CEILING 4095    //Max range of analogRead input, the lower the value the more sensitive (4095 = max)
 
-int dotCount = 0;  //Frame counter for peak dot
+#define DC_OFFSET  0  // DC offset in mic signal - if unusure, leave 0
+#define NOISE     10  // Noise/hum/interference in mic signal
+#define TOP (NUM_LEDS1 + 2) // Allow dot to go slightly off scale
+#define MYSAMPLES 60
+#define PEAK_FALL 40  // Rate of peak falling dot
+
 int dotHangCount = 0; //Frame counter for holding peak dot
-int peak = NUM_LEDS1-1;
+int level     = 0;
 unsigned int sample;
 
+byte
+  peak      = 0,      // Used for falling dot
+  dotCount  = 0,      // Frame counter for delaying dot-falling speed
+  volCount  = 0;      // Frame counter for storing past volume data
 
-
-//Used to draw a line between two points of a given color
-void drawLine(uint8_t from, uint8_t to) {
-  uint8_t fromTemp;
-  if (from > to) {
-    fromTemp = from;
-    from = to;
-    to = fromTemp;
-  }
-
- if(from<0){from=0;}
- if(from>NUM_LEDS1-1){from=NUM_LEDS1-1;}
- if(to<0){to=0;}
- if(to>NUM_LEDS1-1){to=NUM_LEDS1-1;}
-
-  for(int i=from; i<=to; i++){
-    leds1[i] = CRGB::Black;
-  }
-}
-
-// autoscaling for vu meter
-float fscale( float originalMin, float originalMax, float newBegin, float newEnd, float inputValue, float curve){
-  float OriginalRange = 0;
-  float NewRange = 0;
-  float zeroRefCurVal = 0;
-  float normalizedCurVal = 0;
-  float rangedValue = 0;
-  boolean invFlag = 0;
-  if (curve > 10) curve = 10;
-  if (curve < -10) curve = -10;
-  curve = (curve * -.1) ; // - invert and scale - this seems more intuitive - postive numbers give more weight to high end on output
-  curve = pow(10, curve); // convert linear scale into lograthimic exponent for other pow function
-
-  if (inputValue < originalMin) {
-    inputValue = originalMin;
-  }
-  if (inputValue > originalMax) {
-    inputValue = originalMax;
-  }
-  OriginalRange = originalMax - originalMin;
-  if (newEnd > newBegin){
-    NewRange = newEnd - newBegin;
-  }
-  else
-  {
-    NewRange = newBegin - newEnd;
-    invFlag = 1;
-  }
-  zeroRefCurVal = inputValue - originalMin;
-  normalizedCurVal  =  zeroRefCurVal / OriginalRange;   // normalize to 0 - 1 float
-  if (originalMin > originalMax ) {
-    return 0;
-  }
-  if (invFlag == 0){
-    rangedValue =  (pow(normalizedCurVal, curve) * NewRange) + newBegin;
-  }
-  else     // invert the ranges
-  {
-    rangedValue =  newBegin - (pow(normalizedCurVal, curve) * NewRange);
-  }
-  return rangedValue;
-}
+int
+  vol[MYSAMPLES],       // Collection of prior volume samples
+  lvl       = 10,      // Current "dampened" audio level
+  minLvlAvg = 0,      // For dynamic adjustment of graph low & high
+  maxLvlAvg = 512;
 
 void vuMeter(){
-  unsigned long startMillis= millis();  // Start of sample window
-  float peakToPeak = 0;   // peak-to-peak level
+  uint8_t  i;
+  uint16_t minLvl, maxLvl;
+  int      n, height;
 
-  unsigned int signalMax = 0;
-  //unsigned int signalMin = 1023; //external mic
-  unsigned int signalMin = 4095;
-  unsigned int c, y, b;
+  analogReadResolution(10);
+  analogSetWidth(10);
 
-  // collect data for length of sample window (in mS)
-  while (millis() - startMillis < SAMPLE_WINDOW)
-  {
-    sample = analogRead(MICROPHONE_PIN);
-    if (sample < signalMin)  // toss out spurious readings
-    {
-      if (sample > signalMax)
-      {
-        signalMax = sample;  // save just the max levels
-      }
-      else if (sample < signalMin)
-      {
-        signalMin = sample;  // save just the min levels
+  n   = analogRead(MICROPHONE_PIN);                        // Raw reading from mic
+  //Serial.print("reading: ");
+  //Serial.print(n);
+  n   = abs(n - 512 - DC_OFFSET); // Center on zero
+  //Serial.print(" | center: ");
+  //Serial.print(n);
+  n   = (n <= NOISE) ? 0 : (n - NOISE);             // Remove noise/hum
+  lvl = ((lvl * 7) + n) >> 3;    // "Dampened" reading (else looks twitchy)
+
+  //Serial.print(" | lvl: ");
+  //Serial.print(lvl);
+
+    // Calculate bar height based on dynamic min/max levels (fixed point):
+    height = TOP * (lvl - minLvlAvg) / (long)(maxLvlAvg - minLvlAvg);
+    if(height < 0L) {
+      height = 0;    // Clip output
+    }else if(height > TOP){
+      height = TOP;
+    }
+    if(height > peak){
+      peak   = height;
+    } // Keep 'peak' dot at top
+
+    // Color pixels based on rainbow gradient
+    for(i=0; i<NUM_LEDS1-1; i++) {
+      if(i >= height){
+        leds1[i] = CRGB::Black;
+      }else{
+        leds1[i] = CRGB::Red;
       }
     }
-  }
-  peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
 
-  b = fscale(INPUT_FLOOR, INPUT_CEILING, minBrightness, 255, peakToPeak, 2);
+    if(peak > 0 && peak <= NUM_LEDS1-1){
+      //strip.setPixelColor(peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+      leds1[i] = CRGB::Magenta;
+    };
 
-  newBrightness = b;
-  if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
-  if(newBrightness < minBrightness){newBrightness = minBrightness;};
+    Serial.print(" | peak: ");
+    Serial.print(peak);
 
-  if(newBrightness < 5){
-    newBrightness = minBrightness;
-  }
-
-  FastLED.setBrightness(newBrightness);
-  //FastLED.setBrightness(maxBrightness);
-
-  //Fill the strip with rainbow gradient
-  fill_rainbow( leds1, NUM_LEDS1, 0, 255/NUM_LEDS1 );
-
-  //Scale the input logarithmically instead of linearly
-  c = fscale(INPUT_FLOOR, INPUT_CEILING, NUM_LEDS1, 0, peakToPeak, 2);
-
-  Serial.print("c: ");Serial.print(c); Serial.print("|");
-  Serial.print("dhc1: ");Serial.print(dotHangCount); Serial.print("|");
-  if(c <= peak) {
-    peak = c;        // Keep dot on top
-    Serial.print("dhc2: ");Serial.print(dotHangCount); Serial.print("|");
-  }
-
-  if (c <= NUM_LEDS1) { // Fill partial column with off pixels
-    drawLine(NUM_LEDS1-1, NUM_LEDS1-c);
-  }
-
-  y = NUM_LEDS1 - peak;
-  leds1[y-1] = CRGB::Magenta;
-  Serial.print("peak: ");Serial.print(peak); Serial.print("|");
-  Serial.print("dc: ");Serial.print(dotCount); Serial.print("|");
-
-  Serial.println("dhc >=5");
-    if(dotCount >= 3) { //Fall rate
-      peak++;
-      dotCount = 0;
+    // Every few frames, make the peak pixel drop by 1:
+    if(++dotCount >= PEAK_FALL) { //fall rate
+      if(peak > 0) peak--;
+          dotCount = 0;
     }
-    dotCount++;
-  Serial.print("dhc+|");
-  Serial.print("dhc3: ");Serial.print(dotHangCount); Serial.print("|");
-  Serial.println();
-}
+
+    vol[volCount] = n;                      // Save sample for dynamic leveling
+    if(++volCount >= MYSAMPLES){
+      volCount = 0; // Advance/rollover sample counter
+    }
+    // Get volume range of prior frames
+    minLvl = maxLvl = vol[0];
+    for(i=1; i<MYSAMPLES; i++) {
+      if(vol[i] < minLvl)      minLvl = vol[i];
+      else if(vol[i] > maxLvl) maxLvl = vol[i];
+    }
+    if((maxLvl - minLvl) < TOP){
+      maxLvl = minLvl + TOP;
+    }
+
+    minLvlAvg = (minLvlAvg * 63 + minLvl) >> 6; // Dampen min/max levels
+    maxLvlAvg = (maxLvlAvg * 63 + maxLvl) >> 6; // (fake rolling average)
+
+    Serial.print(" | height: ");
+    Serial.print(height);
+
+    level = map(height,0,NUM_LEDS1, NUM_LEDS1, 0);
+    //if(level < 0){level = 0;};
+    //if(level > NUM_LEDS1-NOISE){level = NUM_LEDS1-1;};
+    Serial.print(" | level: ");
+    Serial.println(level);
+
+    newBrightness = map(level, 0,NUM_LEDS1, minBrightness, maxBrightness);
+    if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
+    if(newBrightness < minBrightness){newBrightness = minBrightness;};
+
+    if(newBrightness < 0){
+      newBrightness = minBrightness;
+    }
+
+    FastLED.setBrightness(newBrightness/10);
+  }
