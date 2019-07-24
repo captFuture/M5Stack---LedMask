@@ -5,7 +5,7 @@
 #define NOISE     10  // Noise/hum/interference in mic signal
 #define TOP (NUM_LEDS1 + 2) // Allow dot to go slightly off scale
 #define MYSAMPLES 60
-#define PEAK_FALL 40  // Rate of peak falling dot
+#define PEAK_FALL 10  // Rate of peak falling dot
 
 int dotHangCount = 0; //Frame counter for holding peak dot
 int level     = 0;
@@ -66,19 +66,25 @@ void vuMeter(){
 
       }
       rainbowhue += rainbowhuedelta;
+
+
     }
 
     if(peak > 0 && peak <= NUM_LEDS1-1){
-      leds1[i] = CRGB::Magenta;
+      leds1[peak] = CRGB::Magenta;
     };
 
     Serial.print(" | peak: ");
     Serial.print(peak);
 
     // Every few frames, make the peak pixel drop by 1:
+    Serial.print(" | dc: ");
+    Serial.print(dotCount);
     if(++dotCount >= PEAK_FALL) { //fall rate
-      if(peak > 0) peak--;
-          dotCount = 0;
+      if(peak > 0){
+        peak--;
+      }
+      dotCount = 0;
     }
 
     vol[volCount] = n;                      // Save sample for dynamic leveling
@@ -102,13 +108,12 @@ void vuMeter(){
     Serial.print(height);
 
     level = map(height,0,NUM_LEDS1, NUM_LEDS1, 0);
-    //if(level < 0){level = 0;};
-    //if(level > NUM_LEDS1-NOISE){level = NUM_LEDS1-1;};
+
     Serial.print(" | level: ");
     Serial.println(level);
 
-    //newBrightness = map(level, 0,NUM_LEDS1, minBrightness, maxBrightness);
-    newBrightness = map(peak, 0,NUM_LEDS1, minBrightness, maxBrightness);
+    newBrightness = map(level, 0,NUM_LEDS1, minBrightness, maxBrightness);
+    //newBrightness = map(peak, 0,NUM_LEDS1, minBrightness, maxBrightness);
     if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
     if(newBrightness < minBrightness){newBrightness = minBrightness;};
 
