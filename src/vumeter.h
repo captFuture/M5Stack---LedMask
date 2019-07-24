@@ -21,6 +21,12 @@ void drawLine(uint8_t from, uint8_t to) {
     from = to;
     to = fromTemp;
   }
+
+ if(from<0){from=0;}
+ if(from>NUM_LEDS1-1){from=NUM_LEDS1-1;}
+ if(to<0){to=0;}
+ if(to>NUM_LEDS1-1){to=NUM_LEDS1-1;}
+
   for(int i=from; i<=to; i++){
     leds1[i] = CRGB::Black;
   }
