@@ -8,8 +8,10 @@
 
 int dotCount = 0;  //Frame counter for peak dot
 int dotHangCount = 0; //Frame counter for holding peak dot
-byte peak = NUM_LEDS1;
+int peak = NUM_LEDS1-1;
 unsigned int sample;
+
+
 
 //Used to draw a line between two points of a given color
 void drawLine(uint8_t from, uint8_t to) {
@@ -95,27 +97,24 @@ void vuMeter(){
   peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
 
   b = fscale(INPUT_FLOOR, INPUT_CEILING, minBrightness, 255, peakToPeak, 2);
+
   newBrightness = b;
   if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
   if(newBrightness < minBrightness){newBrightness = minBrightness;};
 
-  newBrightness = map(newBrightness, 0, 255, minBrightness, maxBrightness);
   if(newBrightness < 5){
     newBrightness = minBrightness;
   }
-  /*for(int i=0, i<NUM_LEDS, i++){
-    leds[i]=CHSV();
-  }
-  for(int i=0, i<NUM_LEDS1, i++){
-    leds1[i]=CHSV();
-  }*/
-    //FastLED.setBrightness(newBrightness);
+
+  FastLED.setBrightness(newBrightness);
+  //FastLED.setBrightness(maxBrightness);
 
   //Fill the strip with rainbow gradient
   fill_rainbow( leds1, NUM_LEDS1, 0, 255/NUM_LEDS1 );
 
   //Scale the input logarithmically instead of linearly
   c = fscale(INPUT_FLOOR, INPUT_CEILING, NUM_LEDS1, 0, peakToPeak, 2);
+
   Serial.print("c: ");Serial.print(c); Serial.print("|");
   Serial.print("dhc1: ");Serial.print(dotHangCount); Serial.print("|");
   if(c <= peak) {
@@ -124,7 +123,7 @@ void vuMeter(){
   }
 
   if (c <= NUM_LEDS1) { // Fill partial column with off pixels
-    drawLine(NUM_LEDS1, NUM_LEDS1-c);
+    drawLine(NUM_LEDS1-1, NUM_LEDS1-c);
   }
 
   y = NUM_LEDS1 - peak;
@@ -132,7 +131,7 @@ void vuMeter(){
   Serial.print("peak: ");Serial.print(peak); Serial.print("|");
   Serial.print("dc: ");Serial.print(dotCount); Serial.print("|");
 
-    Serial.println("dhc >=5");
+  Serial.println("dhc >=5");
     if(dotCount >= 3) { //Fall rate
       peak++;
       dotCount = 0;

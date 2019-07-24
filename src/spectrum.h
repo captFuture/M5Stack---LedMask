@@ -119,7 +119,7 @@ void beatDetect(){
           newBrightness = 255;
         }
         FastLED.setBrightness(newBrightness);
-        Serial.println(newBrightness);
+        //Serial.println(newBrightness);
         oldBrightness = newBrightness;
     }
 

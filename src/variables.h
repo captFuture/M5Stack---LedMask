@@ -12,15 +12,16 @@ int oldBrightness = newBrightness;
 int calcBrightness = minBrightness;
 
 byte currentBrightness = maxBrightness;
-int enableMusic = 2;                //set the mode to music reactive initially
+int enableMusic = 1;                //set the mode to music reactive initially
 int power;                          //
 int minBand = 0;                    //
 byte currentBand = minBand;         //spectrum analyzer band to react to
 
 // Timing parameters
-#define cycleTime 15000             //time to keep actual pattern in autoCycle mode
+#define cycleTime 30000             //time to keep actual pattern in autoCycle mode
 #define hueTime 30
 
 /* definitions for second Ledstrip on PORTC */
-#define NUM_LEDS1  22          // Number of pixels in strand
+#define NUM_LEDS1  36
+          // Number of pixels in strand
 #define LED_PIN1    16         // NeoPixel LED strand is connected to PORTC of M5Stack

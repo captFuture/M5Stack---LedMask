@@ -54,7 +54,7 @@ void setup() {
     colormap[i] = M5.Lcd.color565(tft_height-i*.5, i*1.1, 0);
     selectedColormap[i] = M5.Lcd.color565(tft_height-i*.5, 0, i*1.1);
   }
-
+  randomSeed(analogRead(1));
 }
 
 // list of functions that will be displayed
@@ -186,7 +186,7 @@ void loop()
   }
 
   // run a fade effect too if the confetti effect is running
-  //if (effectList[currentEffect] == confetti) fadeAll(1);
+  if (effectList[currentEffect] == confetti) fadeAll(1);
 
   FastLED.show(); // send the contents of the led memory to the LEDs
   M5.update();

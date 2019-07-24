@@ -103,7 +103,7 @@ void glitter() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 15;
-    musicEffectDelay = 0;
+    musicEffectDelay = 15;
   }
 
   // Draw one frame of the animation into the LED array
@@ -126,7 +126,7 @@ void colorFill() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 45;
-    musicEffectDelay = 0;
+    musicEffectDelay = 20;
     currentColor = 0;
     currentRow = 0;
     currentDirection = 0;
@@ -136,7 +136,7 @@ void colorFill() {
   // test a bitmask to fill up or down when currentDirection is 0 or 2 (0b00 or 0b10)
   if (!(currentDirection & 1)) {
     effectDelay = 45; // slower since vertical has fewer pixels
-    musicEffectDelay = 0;
+    musicEffectDelay = 20;
     for (byte x = 0; x < kMatrixWidth; x++) {
       byte y = currentRow;
       if (currentDirection == 2) y = kMatrixHeight - 1 - currentRow;
@@ -147,7 +147,7 @@ void colorFill() {
   // test a bitmask to fill left or right when currentDirection is 1 or 3 (0b01 or 0b11)
   if (currentDirection & 1) {
     effectDelay = 20; // faster since horizontal has more pixels
-    musicEffectDelay = 0;
+    musicEffectDelay = 10;
     for (byte y = 0; y < kMatrixHeight; y++) {
       byte x = currentRow;
       if (currentDirection == 3) x = kMatrixWidth - 1 - currentRow;
@@ -203,7 +203,7 @@ void sideRain() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 30;
-    musicEffectDelay = 0;
+    musicEffectDelay = 30;
   }
 
   scrollArray(rainDir);
@@ -221,7 +221,7 @@ void confetti() {
   if (effectInit == false) {
     effectInit = true;
     effectDelay = 10;
-    musicEffectDelay = 0;
+    musicEffectDelay = 10;
     selectRandomPalette();
   }
 
