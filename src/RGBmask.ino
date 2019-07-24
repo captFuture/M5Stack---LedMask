@@ -101,6 +101,7 @@ void loop()
   if(M5.BtnA.wasPressed()){
     currentBrightness += 51; // increase the brightness (wraps to lowest)
     FastLED.setBrightness(scale8(currentBrightness,maxBrightness));
+    maxBrightness = currentBrightness;
     Serial.print("Brightness: "); Serial.println(currentBrightness);
   }
 

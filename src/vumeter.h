@@ -54,16 +54,21 @@ void vuMeter(){
     } // Keep 'peak' dot at top
 
     // Color pixels based on rainbow gradient
+    int rainbowhue = 0;
+    int rainbowhuedelta = 255/NUM_LEDS1;
     for(i=0; i<NUM_LEDS1-1; i++) {
+
       if(i >= height){
         leds1[i] = CRGB::Black;
       }else{
-        leds1[i] = CRGB::Red;
+
+          leds1[i].setHue(rainbowhue);
+
       }
+      rainbowhue += rainbowhuedelta;
     }
 
     if(peak > 0 && peak <= NUM_LEDS1-1){
-      //strip.setPixelColor(peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
       leds1[i] = CRGB::Magenta;
     };
 
@@ -102,13 +107,15 @@ void vuMeter(){
     Serial.print(" | level: ");
     Serial.println(level);
 
-    newBrightness = map(level, 0,NUM_LEDS1, minBrightness, maxBrightness);
+    //newBrightness = map(level, 0,NUM_LEDS1, minBrightness, maxBrightness);
+    newBrightness = map(peak, 0,NUM_LEDS1, minBrightness, maxBrightness);
     if(newBrightness > maxBrightness){newBrightness = maxBrightness;};
     if(newBrightness < minBrightness){newBrightness = minBrightness;};
 
     if(newBrightness < 0){
       newBrightness = minBrightness;
     }
-
+    Serial.print(" | Brightness: ");
+    Serial.println(newBrightness/10);
     FastLED.setBrightness(newBrightness/10);
   }

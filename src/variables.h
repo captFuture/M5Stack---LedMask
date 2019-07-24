@@ -6,7 +6,7 @@
 #define SPEAKER_PIN 25
 
 int minBrightness = 2;              //minimal brightness of Mask LEDs when reacting to music
-int maxBrightness = 255;            //maximal brightness of Mask LEDs when reacting to music
+int maxBrightness = 180;            //maximal brightness of Mask LEDs when reacting to music
 int newBrightness = minBrightness;  //set the LED brightness initially
 int oldBrightness = newBrightness;
 int calcBrightness = minBrightness;
