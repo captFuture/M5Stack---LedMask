@@ -4,3 +4,4 @@
 .vscode
 .clang_complete
 .gcc-flags.json
+/data/
