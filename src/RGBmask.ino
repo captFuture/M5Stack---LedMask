@@ -1,7 +1,6 @@
 #include "variables.h"
 #include "FS.h"
-#include "SPIFFS.h"
-#include <HTTPClient.h>
+#include "backgroundimage.h"
 #include <M5Stack.h>
 #include <FastLED.h>
 CRGB leds1[NUM_LEDS1];
@@ -21,9 +20,6 @@ CRGB leds1[NUM_LEDS1];
 #include <math.h>
 #include "vumeter.h"
 
-#define imgTml tmllogo
-#define PicArray extern unsigned char
-PicArray imgTml[];
 
 void setup() {
   M5.begin();
@@ -36,12 +32,7 @@ void setup() {
   FastLED.setBrightness( scale8(minBrightness, maxBrightness) );
 
   M5.Lcd.fillScreen(TFT_BLACK);
-  if(!SPIFFS.begin(true)){
-    Serial.println("SPIFFS Mount Failed");
-  }else{
-    Serial.println("SPIFFS Mount Success");
-    M5.Lcd.drawJpgFile(SPIFFS, "/tml_logo.jpg", 0, 0);
-  }
+
   M5.Lcd.setTextColor(YELLOW);
   M5.Lcd.setTextSize(2);
   M5.Lcd.setCursor(10, 10);
@@ -140,7 +131,9 @@ void loop()
     if(enableMusic > 2){enableMusic = 0;};
 
     M5.Lcd.fillScreen(TFT_BLACK);
-    M5.Lcd.drawJpgFile(SPIFFS, "/tml_logo.jpg", 0, 0);
+
+    M5.Lcd.drawJpg(bg_image, 153600, 0, 0);
+
     M5.Lcd.setTextColor(YELLOW);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(30, 10);
