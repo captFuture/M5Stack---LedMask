@@ -1,6 +1,7 @@
 #include "variables.h"
 #include "FS.h"
 #include "SPIFFS.h"
+#include <HTTPClient.h>
 #include <M5Stack.h>
 #include <FastLED.h>
 CRGB leds1[NUM_LEDS1];
